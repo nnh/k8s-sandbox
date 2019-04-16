@@ -1,4 +1,4 @@
-FROM ruby:2.6.2-alpine
+FROM ruby:2.6.2-alpine as builder
 
 ENV RAILS_ENV production
 ENV SECRET_KEY_BASE f480ff83b841c707e308703b598c0f5fce3e9b2ee545466fa20d6dbe220b0277a5502ea5d6fc089aaa2ede8d6069b99c52a554026dad5750c0fba558dce5ea03
@@ -14,14 +14,6 @@ RUN apk upgrade --no-cache && \
   libxml2-dev \
   libxslt-dev \
   tzdata
-  # && \
-  # apk add --update --no-cache --virtual=build-dependencies \
-  # curl-dev \
-  # linux-headers \
-  # postgresql-dev \
-  # ruby-dev \
-  # yaml-dev \
-  # zlib-dev
 
 # dockerのキャッシュ戦略によって、下記のコードでは毎回cloneされないため、--no-cacheを利用する
 RUN git clone --depth 1 --branch master https://github.com/nnh/k8s-sandbox.git app
@@ -33,4 +25,26 @@ RUN  gem install bundler && \
   yarn install --production=true && \
   bundle exec rake assets:precompile
 
-CMD ["bundle", "exec", "rails", "server", "-e", "production"]
+#CMD ["bundle", "exec", "rails", "server", "-e", "production"]
+
+FROM ruby:2.6.2-alpine
+
+ENV LANG ja_JP.UTF-8
+ENV LC_ALL ja_JP.UTF-8
+ENV TZ JST-9
+ENV RAILS_ENV production
+ENV SECRET_KEY_BASE f480ff83b841c707e308703b598c0f5fce3e9b2ee545466fa20d6dbe220b0277a5502ea5d6fc089aaa2ede8d6069b99c52a554026dad5750c0fba558dce5ea03
+
+RUN apk upgrade --no-cache && \
+  apk add --update --no-cache \
+  sqlite-dev \
+  nodejs \
+  tzdata
+
+COPY --from=builder /usr/local/bundle /usr/local/bundle
+COPY --from=builder /app /app
+
+WORKDIR /app
+
+CMD bundle exec rails db:migrate \
+    && puma -e production
