@@ -1,6 +1,7 @@
 FROM ruby:2.6.2-alpine
 
 ENV RAILS_ENV production
+ENV SECRET_KEY_BASE f480ff83b841c707e308703b598c0f5fce3e9b2ee545466fa20d6dbe220b0277a5502ea5d6fc089aaa2ede8d6069b99c52a554026dad5750c0fba558dce5ea03
 RUN apk upgrade --no-cache && \
   apk add --update --no-cache \
   sqlite-dev \
@@ -9,14 +10,14 @@ RUN apk upgrade --no-cache && \
   nodejs \
   nodejs-npm \
   ttf-freefont \
+  build-base \
+  libxml2-dev \
+  libxslt-dev \
   tzdata
   # && \
   # apk add --update --no-cache --virtual=build-dependencies \
-  # build-base \
   # curl-dev \
   # linux-headers \
-  # libxml2-dev \
-  # libxslt-dev \
   # postgresql-dev \
   # ruby-dev \
   # yaml-dev \
@@ -32,3 +33,4 @@ RUN  gem install bundler && \
   yarn install --production=true && \
   bundle exec rake assets:precompile
 
+CMD ["bundle", "exec", "rails", "server", "-e", "production"]
