@@ -1,0 +1,16 @@
+version: '3'
+services:
+  nginx:
+    build:
+      context: '.'
+      dockerfile: 'nginx'
+    ports:
+      - "8080:80"
+    links:
+      - rails
+  rails:
+    build:
+      context: '.'
+      dockerfile: 'rails'
+    ports:
+      - "3000:3000"
