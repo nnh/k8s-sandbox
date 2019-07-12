@@ -1,0 +1,61 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8s-sandbox
+  template:
+    metadata:
+      labels:
+        app: k8s-sandbox
+    spec:
+      containers:
+      - name: rails
+        image: 140031108709.dkr.ecr.ap-northeast-1.amazonaws.com/k8s-sandbox-rails:1.0
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        ports:
+        - name: puma
+          containerPort: 3000
+      - name: nginx
+        image: 140031108709.dkr.ecr.ap-northeast-1.amazonaws.com/k8s-sandbox-nginx:1.0
+        imagePullPolicy: Always
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        ports:
+        - name: http-server
+          containerPort: 80
+      hostAliases:
+      - ip: "127.0.0.1"
+        hostnames:
+        - "rails"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-sandbox-service
+  labels:
+    app: k8s-sandbox-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: k8s-sandbox
